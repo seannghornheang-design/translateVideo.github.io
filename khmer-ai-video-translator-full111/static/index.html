@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khmer AI Video Translator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#f5f7fb;font-family:Arial,sans-serif}
+header{text-align:center;padding:30px 16px;background:#17243a}h1{color:#24d69b;margin:0 0 10px}
+header p,.muted{color:#bdc8d8}main{width:min(760px,92%);margin:28px auto}
+.card{background:#1b2940;padding:24px;border-radius:15px;margin-bottom:18px}
+h2{color:#24d69b;margin-top:0;font-size:20px}label{display:block;margin:14px 0 7px}
+input,select{width:100%;padding:13px;border-radius:8px;border:1px solid #52627a;background:#101827;color:white}
+button{width:100%;padding:14px;margin-top:16px;border:0;border-radius:9px;background:#16a36a;color:white;font-size:16px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}#status{margin-top:16px;line-height:1.6;overflow-wrap:anywhere}
+a.download{display:block;margin-top:14px;padding:13px;background:#2464a5;color:white;text-align:center;border-radius:8px;text-decoration:none}
+footer{text-align:center;padding:24px;color:#8996aa}
+</style>
+</head>
+<body>
+<header><h1>🇰🇭 Khmer AI Video Translator</h1><p>បកប្រែសំឡេងវីដេអូទៅជាភាសាខ្មែរ</p></header>
+<main>
+<section class="card">
+<h2>🎬 1. Upload វីដេអូ</h2>
+<p class="muted">កំណែនេះទទួលវីដេអូដែលអ្នកមានសិទ្ធិប្រើប្រាស់។ YouTube URL មិនទាន់បើកនៅឡើយទេ។</p>
+<label for="video">ជ្រើសរើសវីដេអូ (MP4, MOV, WEBM, MKV)</label>
+<input id="video" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska">
+</section>
+<section class="card">
+<h2>🎙️ 2. ជ្រើសរើសសំឡេងខ្មែរ</h2>
+<label for="voice">ប្រភេទសំឡេងអ្នកនិយាយក្នុងវីដេអូ</label>
+<select id="voice"><option value="male">ប្រុស → សំឡេងប្រុសខ្មែរ</option><option value="female">ស្រី → សំឡេងស្រីខ្មែរ</option></select>
+<label><input id="subtitles" type="checkbox" checked style="width:auto"> បញ្ចូល Subtitle ខ្មែរក្នុងវីដេអូ</label>
+<p class="muted">បច្ចុប្បន្នជ្រើសសំឡេងមួយសម្រាប់វីដេអូទាំងមូល។ ការសម្គាល់ប្រុស/ស្រីច្រើននាក់ដោយស្វ័យប្រវត្តិមិនទាន់មានទេ។</p>
+</section>
+<section class="card">
+<h2>🚀 3. បកប្រែ</h2>
+<button id="start">ចាប់ផ្ដើមបកប្រែជាភាសាខ្មែរ</button>
+<div id="status" role="status" aria-live="polite"></div>
+<div id="download"></div>
+</section>
+</main>
+<footer>Khmer AI Video Translator</footer>
+<script>
+const startButton=document.getElementById("start");
+startButton.addEventListener("click",async()=>{
+  const file=document.getElementById("video").files[0];
+  const status=document.getElementById("status");
+  const download=document.getElementById("download");
+  download.innerHTML="";
+  if(!file){status.textContent="សូមជ្រើសរើសវីដេអូជាមុនសិន។";return;}
+  const form=new FormData();
+  form.append("video",file);
+  form.append("voice_type",document.getElementById("voice").value);
+  form.append("burn_subtitles",document.getElementById("subtitles").checked ? "true":"false");
+  startButton.disabled=true;
+  status.textContent="កំពុង Upload និងបកប្រែ... វីដេអូវែងអាចចំណាយពេលច្រើននាទី។";
+  try{
+    const response=await fetch("/api/translate",{method:"POST",body:form});
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.detail||"Translation failed");
+    status.textContent="បកប្រែរួចរាល់!";
+    const link=document.createElement("a");
+    link.className="download";
+    link.href=data.download_url;
+    link.textContent="⬇️ ទាញយកវីដេអូខ្មែរ MP4";
+    download.appendChild(link);
+  }catch(error){
+    status.textContent="មានបញ្ហា៖ "+error.message;
+  }finally{
+    startButton.disabled=false;
+  }
+});
+</script>
+</body>
+</html>
